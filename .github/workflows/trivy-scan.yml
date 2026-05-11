@@ -1,0 +1,57 @@
+name: Trivy Security Scan — CloudNative Finance Lab
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: "0 8 * * 1"
+
+jobs:
+  trivy-scan:
+    name: Scan nginx:1.14.0 for CVEs
+    runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Pull vulnerable image
+        run: docker pull nginx:1.14.0
+
+      - name: Run Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: nginx:1.14.0
+          format: sarif
+          output: trivy-results.sarif
+          severity: CRITICAL,HIGH,MEDIUM
+          exit-code: "0"
+
+      - name: Upload results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+          category: nginx-1.14.0-image-scan
+
+      - name: Scan Kubernetes manifest
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          scan-ref: k8s/vulnerable-deployment.yaml
+          format: sarif
+          output: trivy-manifest-results.sarif
+          exit-code: "0"
+
+      - name: Upload manifest results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-manifest-results.sarif
+          category: k8s-manifest-misconfig-scan
