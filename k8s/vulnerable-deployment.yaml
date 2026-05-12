@@ -15,20 +15,25 @@ spec:
     spec:
       containers:
       - name: vulnerable-container
-        image: nginx:1.14.0
+        image: nginx:1.25-alpine
         securityContext:
-          privileged: true
-          runAsUser: 0
-          allowPrivilegeEscalation: true
+          privileged: false
+          runAsUser: 10001
+          runAsGroup: 10001
+          runAsNonRoot: true
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+          seccompProfile:
+            type: RuntimeDefault
         ports:
-        - containerPort: 80
-        env:
-        - name: DB_PASSWORD
-          value: "super_secret_password_123"
-        volumeMounts:
-        - name: host-root
-          mountPath: /host
-      volumes:
-      - name: host-root
-        hostPath:
-          path: /
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
