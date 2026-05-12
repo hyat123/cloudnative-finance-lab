@@ -10,7 +10,7 @@ on:
 
 jobs:
   trivy-scan:
-    name: Scan nginx:1.14.0 for CVEs
+    name: Scan nginx:1.25-alpine for CVEs
     runs-on: ubuntu-latest
 
     permissions:
@@ -21,13 +21,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Pull vulnerable image
-        run: docker pull nginx:1.14.0
+      - name: Pull alpine image
+        run: docker pull nginx:1.25-alpine
 
       - name: Run Trivy scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: nginx:1.14.0
+          image-ref: nginx:1.25-alpine
           format: sarif
           output: trivy-results.sarif
           severity: CRITICAL,HIGH,MEDIUM
@@ -38,7 +38,7 @@ jobs:
         if: always()
         with:
           sarif_file: trivy-results.sarif
-          category: nginx-1.14.0-image-scan
+          category: nginx-1.25-alpine-image-scan
 
       - name: Scan Kubernetes manifest
         uses: aquasecurity/trivy-action@master
